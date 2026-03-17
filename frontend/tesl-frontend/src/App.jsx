@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import "./App.css";
 
 const COLORS = ["All", "Blue", "Green", "Red", "Yellow", "Purple", "Neutral", "Multi Color"];
+const API = import.meta.env.VITE_API_URL || '';
 
 function App() {
   const [cards, setCards] = useState([]);
@@ -11,14 +12,13 @@ function App() {
   const [visibleCount, setVisibleCount] = useState(30);
   const [search, setSearch] = useState("");
 
-  // Fetch cards from backend when color filter changes
   useEffect(() => {
     setLoading(true);
     setVisibleCount(30);
     setSearch("");
     const url = selectedColor === "All" || selectedColor === "Multi Color"
-      ? "/cards"
-      : `/cards?color=${selectedColor}`;
+      ? `${API}/cards`
+      : `${API}/cards?color=${selectedColor}`;
 
     fetch(url)
       .then(res => res.json())
@@ -57,7 +57,7 @@ function App() {
 
   const handleDownload = () => {
     const cardIds = deck.map(c => c.id);
-    fetch("/download-pdf", {
+    fetch(`${API}/download-pdf`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(cardIds)

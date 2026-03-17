@@ -5,9 +5,14 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/cards': 'http://localhost:8080',
-      '/images': 'http://localhost:8080',
-      '/download-pdf': 'http://localhost:8080',
+      '/cards': 'https://tesl-deck-builder-production.up.railway.app',
+      '/images': 'https://tesl-deck-builder-production.up.railway.app',
+      '/download-pdf': 'https://tesl-deck-builder-production.up.railway.app',
     }
+  },
+  define: {
+    'import.meta.env.VITE_API_URL': JSON.stringify(
+      process.env.VITE_API_URL || ''
+    )
   }
 })
