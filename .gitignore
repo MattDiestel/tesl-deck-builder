@@ -1,0 +1,13 @@
+# Python
+*.py
+__pycache__/
+
+# Maven build output
+backend/target/
+
+# Node modules
+frontend/tesl-frontend/node_modules/
+
+# Environment files
+.env
+*.env

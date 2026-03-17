@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 public class CardService {
 
     private static final String TESL_PATH = "/home/matt/TESL/TESL-web";
+    private static final String CLOUDINARY_BASE = "https://res.cloudinary.com/dmwxzhylv/image/upload/TESL";
 
     public List<Card> getAllCards() {
         List<Card> cards = new ArrayList<>();
@@ -25,8 +26,8 @@ public class CardService {
                     for (File image : images) {
                         String filename = image.getName().replace(".png", "");
                         String id = color + "_" + filename;
-                        String imagePath = "/images/" + color + "/" + filename;
-                        cards.add(new Card(id, imagePath, List.of(color)));
+                        String imageUrl = CLOUDINARY_BASE + "/" + color + "/fronts/" + filename;
+                        cards.add(new Card(id, imageUrl, List.of(color)));
                     }
                 }
             }
@@ -38,15 +39,15 @@ public class CardService {
             File[] colorCombos = multiColorFolder.listFiles(File::isDirectory);
             if (colorCombos != null) {
                 for (File combo : colorCombos) {
-                    String comboName = combo.getName(); // e.g. "Blue_Green"
+                    String comboName = combo.getName();
                     List<String> colors = Arrays.asList(comboName.split("_"));
                     File[] images = combo.listFiles((dir, name) -> name.endsWith(".png"));
                     if (images != null) {
                         for (File image : images) {
                             String filename = image.getName().replace(".png", "");
                             String id = comboName + "_" + filename;
-                            String imagePath = "/images/Multi Color/" + comboName + "/" + filename;
-                            cards.add(new Card(id, imagePath, colors));
+                            String imageUrl = CLOUDINARY_BASE + "/Multi Color/" + comboName + "/" + filename;
+                            cards.add(new Card(id, imageUrl, colors));
                         }
                     }
                 }

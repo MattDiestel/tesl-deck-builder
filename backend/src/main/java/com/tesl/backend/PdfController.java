@@ -1,28 +1,22 @@
 package com.tesl.backend;
 
-import java.io.ByteArrayOutputStream;
+import com.itextpdf.io.image.ImageDataFactory;
+import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.geom.PageSize;
+import com.itextpdf.layout.Document;
+import com.itextpdf.layout.element.Image;
+import com.itextpdf.layout.element.Table;
+import com.itextpdf.layout.element.Cell;
+import com.itextpdf.layout.properties.UnitValue;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+import java.io.*;
 import java.net.URL;
 import java.util.List;
 
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.itextpdf.text.Document;
-import com.itextpdf.text.Image;
-import com.itextpdf.text.PageSize;
-import com.itextpdf.text.Rectangle;
-import com.itextpdf.text.pdf.PdfPCell;
-import com.itextpdf.text.pdf.PdfPTable;
-import com.itextpdf.text.pdf.PdfWriter;
-
 @RestController
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173", "https://frontend-gilt-kappa-25.vercel.app"})
 public class PdfController {
 
     private final CardService cardService;
@@ -34,20 +28,20 @@ public class PdfController {
     @PostMapping("/download-pdf")
     public ResponseEntity<byte[]> downloadPdf(@RequestBody List<String> cardIds) {
         try {
-            // Build a lookup map of all cards
             java.util.Map<String, Card> cardMap = new java.util.HashMap<>();
             for (Card c : cardService.getAllCards()) {
                 cardMap.put(c.getId(), c);
             }
 
-            // A4 page, 3 cards per row
-            Document document = new Document(PageSize.A4, 10, 10, 10, 10);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            PdfWriter.getInstance(document, baos);
-            document.open();
+            PdfWriter writer = new PdfWriter(baos);
+            PdfDocument pdf = new PdfDocument(writer);
+            Document document = new Document(pdf, PageSize.A4);
+            document.setMargins(10, 10, 10, 10);
 
-            PdfPTable table = new PdfPTable(3);
-            table.setWidthPercentage(100);
+            float[] columnWidths = {1, 1, 1};
+            Table table = new Table(UnitValue.createPercentArray(columnWidths));
+            table.setWidth(UnitValue.createPercentValue(100));
 
             int count = 0;
             for (String cardId : cardIds) {
@@ -55,28 +49,26 @@ public class PdfController {
                 if (card == null) continue;
 
                 try {
-                    // Fetch image from Cloudinary URL
-                    String imageUrl = card.getImagePath();
-                    Image img = Image.getInstance(new URL(imageUrl));
-                    img.scaleToFit(180, 250);
+                    byte[] imageBytes = new URL(card.getImagePath()).openStream().readAllBytes();
+                    Image img = new Image(ImageDataFactory.create(imageBytes));
+                    img.setAutoScale(true);
 
-                    PdfPCell cell = new PdfPCell(img, true);
-                    cell.setBorder(Rectangle.NO_BORDER);
+                    Cell cell = new Cell().add(img);
+                    cell.setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
                     cell.setPadding(3);
                     table.addCell(cell);
                     count++;
                 } catch (Exception e) {
-                    // Skip cards that fail to load
                     System.out.println("Skipping card: " + cardId + " — " + e.getMessage());
                 }
             }
 
-            // Fill remaining cells in last row
+            // Fill remaining cells
             int remainder = count % 3;
             if (remainder != 0) {
                 for (int i = 0; i < 3 - remainder; i++) {
-                    PdfPCell empty = new PdfPCell();
-                    empty.setBorder(Rectangle.NO_BORDER);
+                    Cell empty = new Cell();
+                    empty.setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
                     table.addCell(empty);
                 }
             }
@@ -93,6 +85,7 @@ public class PdfController {
             return ResponseEntity.ok().headers(headers).body(baos.toByteArray());
 
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
     }
