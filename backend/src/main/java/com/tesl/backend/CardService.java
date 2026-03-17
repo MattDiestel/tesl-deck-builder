@@ -3,12 +3,12 @@ package com.tesl.backend;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import org.springframework.stereotype.Service;
+import jakarta.annotation.PostConstruct;
 import java.util.*;
 
 @Service
 public class CardService {
 
-    private static final String CLOUDINARY_BASE = "https://res.cloudinary.com/dmwxzhylv/image/upload/TESL";
     private static final String[] SINGLE_COLORS = {"Blue", "Green", "Red", "Yellow", "Purple", "Neutral"};
     private static final String[] MULTI_COLORS = {
         "Blue_Green", "Blue_Purple", "Blue_Yellow", "Blue_Yellow_Green",
@@ -18,6 +18,8 @@ public class CardService {
     };
 
     private final Cloudinary cloudinary;
+    private final String CLOUDINARY_BASE;
+    private List<Card> cachedCards = new ArrayList<>();
 
     public CardService() {
         this.cloudinary = new Cloudinary(ObjectUtils.asMap(
@@ -25,9 +27,14 @@ public class CardService {
             "api_key", System.getenv("CLOUDINARY_API_KEY"),
             "api_secret", System.getenv("CLOUDINARY_API_SECRET")
         ));
+        this.CLOUDINARY_BASE = "https://res.cloudinary.com/" 
+            + System.getenv("CLOUDINARY_CLOUD_NAME") 
+            + "/image/upload/TESL";
     }
 
-    public List<Card> getAllCards() {
+    @PostConstruct
+    public void loadCards() {
+        System.out.println("Loading cards from Cloudinary...");
         List<Card> cards = new ArrayList<>();
 
         // Single colors
@@ -48,6 +55,7 @@ public class CardService {
                         cards.add(new Card(id, imageUrl, List.of(color)));
                     }
                 }
+                System.out.println("Loaded " + color);
             } catch (Exception e) {
                 System.out.println("Error fetching " + color + ": " + e.getMessage());
             }
@@ -72,11 +80,17 @@ public class CardService {
                         cards.add(new Card(id, imageUrl, colors));
                     }
                 }
+                System.out.println("Loaded Multi Color/" + combo);
             } catch (Exception e) {
                 System.out.println("Error fetching " + combo + ": " + e.getMessage());
             }
         }
 
-        return cards;
+        this.cachedCards = cards;
+        System.out.println("Done! Loaded " + cards.size() + " cards.");
+    }
+
+    public List<Card> getAllCards() {
+        return cachedCards;
     }
 }
