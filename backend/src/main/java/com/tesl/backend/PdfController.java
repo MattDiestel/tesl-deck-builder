@@ -51,7 +51,8 @@ public class PdfController {
                 try {
                     byte[] imageBytes = new URL(card.getImagePath()).openStream().readAllBytes();
                     Image img = new Image(ImageDataFactory.create(imageBytes));
-                    img.setAutoScale(true);
+                    img.scaleToFit(180, 250);
+                    img.setAutoScale(false);
 
                     Cell cell = new Cell().add(img);
                     cell.setBorder(com.itextpdf.layout.borders.Border.NO_BORDER);
