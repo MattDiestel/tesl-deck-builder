@@ -4,7 +4,7 @@ A full-stack web application that allows users to browse, filter, and build deck
 
 Note that Railway subscription has ended and only the frontend is currently deployed. This app will be back up May 22nd
 
-**Live App:** https://frontend-gilt-kappa-25.vercel.app/
+**Semi-Live App:** https://frontend-gilt-kappa-25.vercel.app/
 ---
 
 ## Features
